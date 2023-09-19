@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    image: localstack/localstack
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=s3,secretsmanager
+    volumes:
+      - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  api:
+    container_name: demo
+    image: localhost/demoapp
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - localstack
+    environment:
+      AWS_ACCESSKEY: test
+      AWS_SECRETKEY: test
+      AWS_SERVICEENDPOINT: http://localstack:4566
+      AWS_REGION: ap-southeast-1
+      CONFIG_ENVIRONMENT: docker
+      AWS_S3_BUCKETNAME: mybucket
+      AWS_S3_FILENAME: test.txt
+      AWS_SECRETSMANAGER_SECRETID: MyTestSecret
+    ports:
+      - 8080:8080

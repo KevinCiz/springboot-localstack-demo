@@ -1,0 +1,12 @@
+aws:
+  accessKey: acessKey
+  secretKey: secretKey
+  serviceEndpoint: ${LOCALSTACK_URL:http://localhost:4566}
+  region: ap-southeast-1
+  s3:
+    bucketName: mybucket
+    fileName: test.txt
+  secretsmanager:
+    secretId: MyTestSecret
+config: 
+  environment: ${ENVIRONMENT:dev}
