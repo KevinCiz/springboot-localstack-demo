@@ -3,9 +3,8 @@ variables:
   IMAGE_REPO_PATH: ecs/demo-spring-boot
   CONTEXT: $CI_PROJECT_DIR
   AWS_REGION: ap-southeast-1
-  MDS_DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_ARN: arn:aws:iam::${AWS_ACCOUNT_ID}:role/devsecops-cross-account-runner-role
+  MDS_DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_ARN: arn:aws:iam::301722810093:role/devsecops-cross-account-runner-role
   DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID: DFCOLLAB2021
-
 
 stages:
   - build-java
