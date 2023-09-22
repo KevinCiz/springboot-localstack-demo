@@ -14,7 +14,7 @@ build-java:
   stage: build-java
   image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/java-maven
   script:
-    - CREDENTIALS=`aws sts assume-role --role-arn "${DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_ARN}" --role-session-name RoleSession --output=json --external-id ${DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID}`
+    - CREDENTIALS=`aws sts assume-role --role-arn "${MDS_DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_ARN}" --role-session-name RoleSession --output=json --external-id ${DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID}`
     - export AWS_ACCESS_KEY_ID=`echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId'`
     - export AWS_SECRET_ACCESS_KEY=`echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey'`
     - export AWS_SESSION_TOKEN=`echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken'`
