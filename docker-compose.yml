@@ -1,6 +1,18 @@
 version: "3.8"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dockeruser
+      POSTGRES_PASSWORD: dockerpassword
+      POSTGRES_DB: dockerdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
     image: localstack/localstack
@@ -11,25 +23,32 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
       - SERVICES=s3,secretsmanager
     volumes:
-      - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - ./config/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   api:
     container_name: demo
-    image: localhost/demoapp
     build:
       context: ./
       dockerfile: Dockerfile
     depends_on:
       - localstack
+      - postgres
     environment:
       AWS_ACCESSKEY: test
       AWS_SECRETKEY: test
       AWS_SERVICEENDPOINT: http://localstack:4566
       AWS_REGION: ap-southeast-1
-      CONFIG_ENVIRONMENT: docker
+      CONFIG_ENVIRONMENT: local
       AWS_S3_BUCKETNAME: mybucket
       AWS_S3_FILENAME: test.txt
       AWS_SECRETSMANAGER_SECRETID: MyTestSecret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dockerdb
+      SPRING_DATASOURCE_USERNAME: dockeruser
+      SPRING_DATASOURCE_PASSWORD: dockerpassword
+      SPRING_PROFILE_ACTIVE: local
     ports:
       - 8080:8080
+
+volumes:
+  postgres-data:

@@ -9,4 +9,18 @@ aws:
   secretsmanager:
     secretId: MyTestSecret
 config: 
-  environment: ${ENVIRONMENT:dev}
+  environment: ${ENVIRONMENT:local}
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/dockerdb
+    username: dockeruser
+    password: dockerpassword
+    hikari:
+      connectionTimeout: 20000
+      maximumPoolSize: 5
+  jpa:
+    hibernate.ddl-auto: none # create and drop table (create-drop), good for testing, production set to none (none) or comment it
+app:
+  db:
+    init:
+      enabled: false
