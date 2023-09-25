@@ -8,34 +8,47 @@ variables:
 
 stages:
   - build-java
+  - get-aws-token
   - build-image
+
+get-aws-token:
+  stage: get-aws-token
+  image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/aws-cli
+  script:
+    - AWS_ACCOUNT_ID=$(cat $MANIFESTS_PATH/properties.json | jq '.AWS_ACCOUNT_ID')
+    - CREDENTIALS=`aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/devsecops-cross-account-runner-role" --role-session-name RoleSession --output=json --external-id ${DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID}`
+    - export AWS_ACCESS_KEY_ID=`echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId'`
+    - export AWS_SECRET_ACCESS_KEY=`echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey'`
+    - export AWS_SESSION_TOKEN=`echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken'`
+    - export AWS_EXPIRATION=`echo ${CREDENTIALS} | jq -r '.Credentials.Expiration'`
+    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN AWS_EXPIRATION=$AWS_EXPIRATION" > credentials
+  artifacts:
+    paths:
+      - credentials
+    expire_in: 1 days
+  rules:
+    - if: $MANIFESTS_ENABLED == "True" || $IPI_INSTALL == "True"
+  tags:
+    - non-prod
 
 build-java:
   stage: build-java
   image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/maven-corretto-17
   script:
-    - CREDENTIALS=`aws sts assume-role --role-arn "${MDS_DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_ARN}" --role-session-name RoleSession --output=json --external-id ${DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID}`
-    - export AWS_ACCESS_KEY_ID=`echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId'`
-    - export AWS_SECRET_ACCESS_KEY=`echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey'`
-    - export AWS_SESSION_TOKEN=`echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken'`
-    - export AWS_EXPIRATION=`echo ${CREDENTIALS} | jq -r '.Credentials.Expiration'`
-    - aws configure set region ap-southeast-1
-    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN AWS_EXPIRATION=$AWS_EXPIRATION" > credentials-dev
-    - mvn clean package -Dquarkus.package.type=fast-jar -Dmaven.test.skip=true
+    - mvn clean package
   artifacts:
     paths:
-      - target/quarkus-app
-      - credentials-dev
+      - target/
     expire_in: 1 days
 
 build-image:
   stage: build-image
   dependencies:
-    - build-java
+    - get-aws-token
   image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/kaniko
   script:
     - $(cat credentials)
     - mkdir -p /kaniko/.docker
     - echo "{\"credHelpers\":{\"$REGISTRY_URL\":\"ecr-login\"}}" > /kaniko/.docker/config.json
     - echo $REGISTRY_URL/$IMAGE:$CI_COMMIT_SHORT_SHA
-    - /kaniko/executor --context $CONTEXT --dockerfile $CI_PROJECT_DIR/src/main/docker/Dockerfile.jvm --destination $REGISTRY_URL/$IMAGE_REPO_PATH:$CI_COMMIT_SHORT_SHA
+    - /kaniko/executor --context $CONTEXT --dockerfile $CI_PROJECT_DIR/dockerfile --destination $REGISTRY_URL/$IMAGE_REPO_PATH:$CI_COMMIT_SHORT_SHA
