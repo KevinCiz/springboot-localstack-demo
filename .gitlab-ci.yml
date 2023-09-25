@@ -26,8 +26,6 @@ get-aws-token:
     paths:
       - credentials
     expire_in: 1 days
-  rules:
-    - if: $MANIFESTS_ENABLED == "True" || $IPI_INSTALL == "True"
   tags:
     - non-prod
 
