@@ -7,7 +7,7 @@ variables:
   DEVSECOPS_CROSS_ACCOUNT_RUNNER_IAM_ROLE_EXTERNAL_ID: DFCOLLAB2021
 
 stages:
-  - build-java
+  # - build-java
   - get-aws-token
   - build-image
 
@@ -29,21 +29,21 @@ get-aws-token:
   tags:
     - non-prod
 
-build-java:
-  stage: build-java
-  image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/maven-corretto-17
-  script:
-    - mvn clean package
-  artifacts:
-    paths:
-      - target/
-    expire_in: 1 days
+# build-java:
+#   stage: build-java
+#   image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/maven-corretto-17
+#   script:
+#     - mvn clean package
+#   artifacts:
+#     paths:
+#       - target/
+#     expire_in: 1 days
 
 build-image:
   stage: build-image
   dependencies:
     - get-aws-token
-    - build-java
+    # - build-java
   image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/kaniko
   script:
     - $(cat credentials)
