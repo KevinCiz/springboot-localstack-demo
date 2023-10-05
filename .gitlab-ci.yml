@@ -46,5 +46,5 @@ build-image:
     - $(cat credentials)
     - mkdir -p /kaniko/.docker
     - echo "{\"credHelpers\":{\"$REGISTRY_URL\":\"ecr-login\"}}" > /kaniko/.docker/config.json
-    - echo $REGISTRY_URL/$IMAGE:$CI_COMMIT_SHORT_SHA
+    - echo $REGISTRY_URL/$IMAGE_REPO_PATH:$CI_COMMIT_SHORT_SHA
     - /kaniko/executor --context $CONTEXT --dockerfile $CI_PROJECT_DIR/dockerfile --destination $REGISTRY_URL/$IMAGE_REPO_PATH:$CI_COMMIT_SHORT_SHA
