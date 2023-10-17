@@ -22,7 +22,6 @@ import java.net.URI;
 @Configuration
 @RequiredArgsConstructor
 public class AWSConfig {
-
     private final AwsProperties awsProperties;
 
     private AwsCredentialsProvider getCredentialsProvider() {
@@ -36,6 +35,14 @@ public class AWSConfig {
         
     @Bean
     public S3Client s3Client() {
+        if (System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE") != null) {
+            return S3Client.builder()
+                    .overrideConfiguration(ClientOverrideConfiguration.builder().build())
+                    .credentialsProvider(getCredentialsProvider())
+                    .region(Region.of(awsProperties.getRegion()))
+                    .forcePathStyle(true)
+                    .build(); 
+        }
         return S3Client.builder()
                     .overrideConfiguration(ClientOverrideConfiguration.builder().build())
                     .credentialsProvider(getCredentialsProvider())
@@ -47,6 +54,13 @@ public class AWSConfig {
 
     @Bean
     public SecretsManagerClient secretsManagerClient() {
+        if (System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE") != null) {
+            return SecretsManagerClient.builder()
+                .region(Region.of(awsProperties.getRegion()))
+                .credentialsProvider(getCredentialsProvider())
+                .build();
+        }
+
         return SecretsManagerClient.builder()
                 .region(Region.of(awsProperties.getRegion()))
                 .endpointOverride(URI.create(awsProperties.getServiceEndpoint()))
