@@ -23,7 +23,6 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class AWSConfig {
 
-    @Autowired
     private final AwsProperties awsProperties;
 
     private AwsCredentialsProvider getCredentialsProvider() {
@@ -33,8 +32,6 @@ public class AWSConfig {
         return StaticCredentialsProvider.create(AwsBasicCredentials.create(
                 awsProperties.getAccessKey(),
                 awsProperties.getSecretKey()));
-
-        
     }
         
     @Bean
