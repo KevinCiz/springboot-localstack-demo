@@ -12,14 +12,19 @@ config:
   environment: ${ENVIRONMENT:local}
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/dockerdb
-    username: dockeruser
-    password: dockerpassword
+    url: jdbc:sqlserver://mssql:1433;encrypt=true;trustServerCertificate=true;databaseName=dockerdb
+    username: sa
+    password: Secret1234
     hikari:
       connectionTimeout: 20000
       maximumPoolSize: 5
   jpa:
-    hibernate.ddl-auto: none # create and drop table (create-drop), good for testing, production set to none (none) or comment it
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.SQLServerDialect
 app:
   db:
     init:

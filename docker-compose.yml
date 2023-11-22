@@ -1,17 +1,33 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: dockeruser
-      POSTGRES_PASSWORD: dockerpassword
-      POSTGRES_DB: dockerdb
+  mssql:
+    image: 'mcr.microsoft.com/mssql/server'
     ports:
-      - "5432:5432"
+        - '1433:1433'
+    environment:
+        - ACCEPT_EULA=Y
+        - SA_PASSWORD=Secret1234
     volumes:
-      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - postgres-data:/var/lib/postgresql/data
+        - './drive:/var/opt/mssql'
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Secret1234 -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+  sqlserver.configurator:
+    image: 'mcr.microsoft.com/mssql/server'
+    volumes:
+      - ./init-ms.sql:/docker-entrypoint-initdb.d/init-ms.sql
+    depends_on:
+      mssql:
+        condition: service_healthy
+    command: >
+      bash -c '
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P Secret1234 -d dockerdb -i docker-entrypoint-initdb.d/init-ms.sql;
+      echo "All done!";
+      '
 
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
@@ -33,7 +49,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - localstack
-      - postgres
+      - mssql
     environment:
       AWS_ACCESSKEY: test
       AWS_SECRETKEY: test
@@ -43,12 +59,10 @@ services:
       AWS_S3_BUCKETNAME: mybucket
       AWS_S3_FILENAME: test.txt
       AWS_SECRETSMANAGER_SECRETID: MyTestSecret
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dockerdb
-      SPRING_DATASOURCE_USERNAME: dockeruser
-      SPRING_DATASOURCE_PASSWORD: dockerpassword
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://mssql:1433;encrypt=true;trustServerCertificate=true;databaseName=dockerdb
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: Secret1234
       SPRING_PROFILE_ACTIVE: local
     ports:
       - 8080:8080
 
-volumes:
-  postgres-data:
