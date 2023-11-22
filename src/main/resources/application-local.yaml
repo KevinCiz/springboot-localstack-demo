@@ -12,9 +12,7 @@ config:
   environment: ${ENVIRONMENT:local}
 spring:
   datasource:
-    url: jdbc:sqlserver://mssql:1433;encrypt=true;trustServerCertificate=true;databaseName=dockerdb
-    username: sa
-    password: Secret1234
+    url: jdbc:sqlserver://mssql:1433;user=sa;password=Secret1234;encrypt=true;trustServerCertificate=true;databaseName=dockerdb
     hikari:
       connectionTimeout: 20000
       maximumPoolSize: 5
