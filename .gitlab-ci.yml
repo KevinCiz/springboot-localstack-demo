@@ -43,7 +43,7 @@ build-image:
   dependencies:
     - get-aws-token
     # - build-java
-  image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/ocp/ocp-build
+  image: 207818544005.dkr.ecr.ap-southeast-1.amazonaws.com/mcc-devsecops/ocp-build
   script:
     - $(cat credentials)
     - mkdir -p /kaniko/.docker
