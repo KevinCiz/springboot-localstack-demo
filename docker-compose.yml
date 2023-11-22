@@ -16,16 +16,16 @@ services:
       retries: 10
       start_period: 10s
       timeout: 3s
-  sqlserver.configurator:
+  msssql.configurator:
     image: 'mcr.microsoft.com/mssql/server'
     volumes:
-      - ./init-ms.sql:/docker-entrypoint-initdb.d/init-ms.sql
+      - ./config/init-ms.sql:/docker-entrypoint-initdb.d/init-ms.sql
     depends_on:
       mssql:
         condition: service_healthy
     command: >
       bash -c '
-      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P Secret1234 -d dockerdb -i docker-entrypoint-initdb.d/init-ms.sql;
+      /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P Secret1234 -d master -i docker-entrypoint-initdb.d/init-ms.sql;
       echo "All done!";
       '
 

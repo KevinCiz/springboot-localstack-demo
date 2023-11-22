@@ -11,7 +11,7 @@ CREATE TABLE Book (
 );
 GO
 
-INSERT INTO [product] (title)
+INSERT INTO [Book] (title)
 VALUES 
 ('Book A'),
 ('Book B'),
